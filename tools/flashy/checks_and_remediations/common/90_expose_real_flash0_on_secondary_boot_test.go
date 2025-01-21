@@ -184,29 +184,4 @@ func TestExposeRealFlash0OnSecondaryBoot(t *testing.T) {
 		}
 
 	})
-
-	t.Run("Should bail out if running old versions of galaxy cmm", func(t *testing.T) {
-		var buf bytes.Buffer
-		log.SetOutput(&buf)
-
-		GetMachineOrig := utils.GetMachine
-		defer func() { utils.GetMachine = GetMachineOrig }()
-		utils.GetMachine = func() (string, error) { return "armv6l", nil }
-
-		utils.GetOpenBMCVersionFromIssueFile = func() (string, error) { return "cmm-v29", nil}
-
-		res := ExposeRealFlash0OnSecondaryBoot(step.StepParams{})
-
-		if res != nil {
-			t.Errorf("Expected ExposeRealFlash0OnSecondaryBoot() to return nil, got %v", res)
-		}
-
-		re_expected_log_buffer := "" +
-			"^[^\n]+Old galaxy cmm version detected .cmm-v29., skipping step..."
-
-		if !regexp.MustCompile(re_expected_log_buffer).Match(buf.Bytes()) {
-			t.Errorf("Unexpected log buffer: %v", buf.String())
-		}
-
-	})
 }

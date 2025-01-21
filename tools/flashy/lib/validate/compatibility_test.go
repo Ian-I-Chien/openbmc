@@ -94,13 +94,13 @@ func TestCheckImageBuildNameCompatibility(t *testing.T) {
 		{
 			name:         "ancient image",
 			etcIssueVer:  "unknown-v52.1",
-			imageFileVer: "wedge40-v2019.01.3",
+			imageFileVer: "wedge400-v2019.01.3",
 			want:         nil,
 		},
 		{
 			name:         "older image",
 			etcIssueVer:  "unknown-v42",
-			imageFileVer: "wedge40-v2019.01.3",
+			imageFileVer: "wedge400-v2019.01.3",
 			want:         nil,
 		},
 	}

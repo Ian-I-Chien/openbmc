@@ -301,7 +301,7 @@ var GetOpenBMCVersionFromIssueFile = func() (string, error) {
 	}
 	etcIssueStr := strings.ToLower(string(etcIssueBuf))
 
-	// handle ancient galaxy100 linecard release with missing version info
+	// handle ancient release with missing version info
 	if strings.HasPrefix(etcIssueStr, "openbmc release \n") {
 		return "unknown-v1", nil
 	}
