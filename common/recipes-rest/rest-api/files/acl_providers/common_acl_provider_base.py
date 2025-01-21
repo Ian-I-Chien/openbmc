@@ -60,13 +60,12 @@ class AclProviderBase(metaclass=abc.ABCMeta):
         """
         pass
 
-    @classmethod
-    def is_host_authorized(cls, identity: Identity, permissions: t.List[str]) -> bool:
+    def is_host_authorized(self, identity: Identity, permissions: t.List[str]) -> bool:
         """
         Returns True if any role matching the host identity are in the given
         permissions list.
         """
-        host_roles = cls._get_roles_for_host(identity)
+        host_roles = self._get_roles_for_host(identity)
         return any(role in permissions for role in host_roles)
 
     ## Utils

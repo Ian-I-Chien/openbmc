@@ -65,6 +65,22 @@ class CachedAclProvider(common_acl_provider_base.AclProviderBase):
         user_roles = self._get_permissions_for_user_identity(identity)
         return any(role in permissions for role in user_roles)
 
+    def is_host_authorized(self, identity: Identity, permissions: t.List[str]) -> bool:
+        """
+        Returns True if any role matching the host identity are in the given
+        permissions list.
+        """
+        if not identity.host:
+            return False
+
+        # Check if it's a managed host
+        if super().is_host_authorized(identity, permissions):
+            return True
+
+        # Check host roles in ACL
+        host_roles = self.aclrules.get("host:" + str(identity.host), [])
+        return any(role in permissions for role in host_roles)
+
     def _load_aclrules(self) -> None:
         if not self.cachepath:
             server_logger.warning(

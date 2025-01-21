@@ -35,7 +35,6 @@ EXAMPLE_MANAGED_HOST_IDENTITY = common_auth.Identity(
 
 class MockAclProvider(AclProviderBase):
     always_authorize_user = False
-    always_authorize_host = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -44,9 +43,6 @@ class MockAclProvider(AclProviderBase):
 
     def is_user_authorized(self, identity, permissions):
         return self.always_authorize_user
-
-    def is_host_authorized(self, identity, permissions):
-        return self.always_authorize_host
 
 
 class TestCachedAclProvider(unittest.TestCase):
@@ -63,15 +59,18 @@ class TestCachedAclProvider(unittest.TestCase):
             self.addCleanup(p.stop)
 
     def test_is_host_authorized_no_identity(self):
-        res = AclProviderBase.is_host_authorized(common_auth.NO_IDENTITY, [])
+        acl_provider = MockAclProvider()
+        res = acl_provider.is_host_authorized(common_auth.NO_IDENTITY, [])
         self.assertEqual(res, False)
 
     def test_is_host_authorized_no_permissions(self):
-        res = AclProviderBase.is_host_authorized(EXAMPLE_MANAGED_HOST_IDENTITY, [])
+        acl_provider = MockAclProvider()
+        res = acl_provider.is_host_authorized(EXAMPLE_MANAGED_HOST_IDENTITY, [])
         self.assertEqual(res, False)
 
     def test_is_host_authorized(self):
-        res = AclProviderBase.is_host_authorized(
+        acl_provider = MockAclProvider()
+        res = acl_provider.is_host_authorized(
             EXAMPLE_MANAGED_HOST_IDENTITY, ["MANAGED_HOST_ANY"]
         )
         self.assertEqual(res, True)
@@ -125,9 +124,13 @@ class TestCachedAclProvider(unittest.TestCase):
 
     def test_is_authorized_host(self):
         acl_provider = MockAclProvider()
-        acl_provider.always_authorize_host = True
 
-        self.assertEqual(acl_provider.is_authorized(common_auth.NO_IDENTITY, []), True)
+        self.assertEqual(
+            acl_provider.is_authorized(
+                EXAMPLE_MANAGED_HOST_IDENTITY, ["MANAGED_HOST_ANY"]
+            ),
+            True,
+        )
 
     def test_is_authorized_unauthorized(self):
         acl_provider = MockAclProvider()

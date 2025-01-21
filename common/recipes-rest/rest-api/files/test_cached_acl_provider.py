@@ -34,7 +34,10 @@ class TestCachedAclProvider(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         with tempfile.NamedTemporaryFile("wb") as tmpfile:
-            rules = {"deathowl": ["test", "awesome"]}
+            rules = {
+                "deathowl": ["test", "awesome"],
+                "host:a_hostname.facebook.com": ["example_host_permission"],
+            }
             tmpfile.write(gzip.compress(bytes(json.dumps(rules), encoding="utf-8")))
             tmpfile.seek(0)
             self.subject = cached_acl_provider.CachedAclProvider(cachepath=tmpfile.name)
@@ -61,6 +64,22 @@ class TestCachedAclProvider(unittest.TestCase):
     def testAclProviderDeniesPermissionIfIdentityIsInvalid(self):
         identity = common_auth.Identity(user="nosuchthing", host=None)
         self.assertFalse(self.subject.is_user_authorized(identity, ["derp"]))
+
+    def testAclProvderHostIdentityGrantsPermissionIfMatching(self):
+        identity = common_auth.Identity(user=None, host="a_hostname.facebook.com")
+        self.assertTrue(
+            self.subject.is_host_authorized(identity, ["example_host_permission"])
+        )
+
+    def testAclProvderHostIdentityDeniesPermissionIfNotMatching(self):
+        identity = common_auth.Identity(user=None, host="a_hostname.facebook.com")
+        self.assertFalse(self.subject.is_host_authorized(identity, ["awesome"]))
+
+    def testAclProviderHostIdentityDeniesPermissionIfIdentityIsInvalid(self):
+        identity = common_auth.Identity(user=None, host="another_hostname.facebook.com")
+        self.assertFalse(
+            self.subject.is_user_authorized(identity, ["example_host_permission"])
+        )
 
     def test_signal_handler(self):
         with tempfile.NamedTemporaryFile("wb") as tmpfile:
