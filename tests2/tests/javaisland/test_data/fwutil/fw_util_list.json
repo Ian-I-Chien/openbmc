@@ -53,7 +53,49 @@
             ]
         }
     },
+    "slot2": {
+        "1ou_bic": {
+            "version header": "1OU Bridge-IC Version"
+        },
+        "bic": {
+            "version header": "SB Bridge-IC Version"
+        },
+        "bios": {
+            "version header": "BIOS Version"
+        },
+        "cpld": {
+            "version header": "SB CPLD Version"
+        },
+        "vr": {
+            "version header": [
+                "VR_CPUDVDD Version",
+                "VR_CPUVDD Version",
+                "VR_SOCVDD Version"
+            ]
+        }
+    },
     "slot3": {
+        "1ou_bic": {
+            "version header": "1OU Bridge-IC Version"
+        },
+        "bic": {
+            "version header": "SB Bridge-IC Version"
+        },
+        "bios": {
+            "version header": "BIOS Version"
+        },
+        "cpld": {
+            "version header": "SB CPLD Version"
+        },
+        "vr": {
+            "version header": [
+                "VR_CPUDVDD Version",
+                "VR_CPUVDD Version",
+                "VR_SOCVDD Version"
+            ]
+        }
+    },
+    "slot4": {
         "1ou_bic": {
             "version header": "1OU Bridge-IC Version"
         },
