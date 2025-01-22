@@ -20,6 +20,13 @@
 # shellcheck disable=SC1091
 . /usr/local/bin/openbmc-utils.sh
 
+#
+# Create mcbcpld as early as possible so the driver can be attached to
+# the device when power-on.service is triggered.
+#
+modprobe mcbcpld
+i2c_device_add 12 0x60 mcbcpld
+
 # FRU IDPROMs
 i2c_device_add 3 0x56 24c64  # SCM IDPROM
 i2c_device_add 6 0x53 24c64  # Chassis EEPROM
