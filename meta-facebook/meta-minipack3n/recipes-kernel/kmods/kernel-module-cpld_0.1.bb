@@ -24,9 +24,12 @@ inherit module kernel_extra_headers_export
 PR = "r0"
 PV = "0.1"
 
+S="${WORKDIR}/sources"
+UNPACKDIR="${S}"
+
 LOCAL_URI = " \
     file://Makefile \
-    file://pwrcpld.c \
+    file://mcbcpld.c \
     file://COPYING \
     "
 
