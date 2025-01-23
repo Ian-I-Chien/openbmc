@@ -439,17 +439,6 @@ static const struct i2c_device_id scmcpld_id[] = {
 };
 MODULE_DEVICE_TABLE(i2c, scmcpld_id);
 
-/* Return 0 if detection is successful, -ENODEV otherwise */
-static int scmcpld_detect(struct i2c_client *client,
-                          struct i2c_board_info *info)
-{
-  /*
-   * We don't currently do any detection of the ELBERTCPLD
-   */
-  strlcpy(info->type, "scmcpld", I2C_NAME_SIZE);
-  return 0;
-}
-
 static int scmcpld_probe(struct i2c_client *client)
 {
   int n_attrs = sizeof(scmcpld_attr_table) / sizeof(scmcpld_attr_table[0]);
@@ -465,7 +454,6 @@ static struct i2c_driver scmcpld_driver = {
   },
   .probe    = scmcpld_probe,
   .id_table = scmcpld_id,
-  .detect   = scmcpld_detect,
   .address_list = normal_i2c,
 };
 
