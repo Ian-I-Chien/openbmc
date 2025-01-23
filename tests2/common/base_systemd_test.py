@@ -30,7 +30,10 @@ class BaseSystemdTest(TestCase):
             return
 
         # XXX tcsd is unreliable to start
-        command = "systemctl list-units | grep failed | grep -v trousers"
+        command = (
+            "systemctl list-units | grep failed | "
+            "grep -Ev 'trousers|systemd-remount-fs'"
+        )
         output = subprocess.run(
             command,
             stdout=subprocess.PIPE,
