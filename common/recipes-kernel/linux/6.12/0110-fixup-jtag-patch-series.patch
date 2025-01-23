@@ -1,0 +1,49 @@
+From 310238c18b9b6d89fb046dbff0f26571103b2836 Mon Sep 17 00:00:00 2001
+From: Tao Ren <taoren@fb.com>
+Date: Thu, 13 Oct 2022 03:38:28 -0700
+Subject: [PATCH 110/112] fixup jtag patch series
+
+Put common file changes in this single diff so it's easier to resolve
+merge conflicts in future upgrade.
+---
+ drivers/Kconfig  | 3 ++-
+ drivers/Makefile | 2 ++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index 7bdad836fc62..50ecded79270 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -3,6 +3,8 @@ menu "Device Drivers"
+ 
+ # Keep I/O buses first
+ 
++source "drivers/jtag/Kconfig"
++
+ source "drivers/amba/Kconfig"
+ source "drivers/eisa/Kconfig"
+ source "drivers/pci/Kconfig"
+@@ -10,7 +12,6 @@ source "drivers/cxl/Kconfig"
+ source "drivers/pcmcia/Kconfig"
+ source "drivers/rapidio/Kconfig"
+ 
+-
+ source "drivers/base/Kconfig"
+ 
+ source "drivers/bus/Kconfig"
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 45d1c3e630f7..d97bef3ddfae 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -10,6 +10,8 @@ obj-y				+= cache/
+ obj-y				+= irqchip/
+ obj-y				+= bus/
+ 
++obj-$(CONFIG_JTAG)             += jtag/
++
+ obj-$(CONFIG_GENERIC_PHY)	+= phy/
+ 
+ # GPIO must come after pinctrl as gpios may need to mux pins etc
+-- 
+2.43.5
+
