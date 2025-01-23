@@ -21,10 +21,12 @@
 // #define DEBUG
 
 #include <linux/errno.h>
-#include <linux/module.h>
 #include <linux/i2c.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/version.h>
 
-#include <i2c_dev_sysfs.h>
+#include "i2c_dev_sysfs.h"
 
 #ifdef DEBUG
 #define IR3595_DEBUG(fmt, ...) do {                   \
@@ -149,39 +151,23 @@ static const struct i2c_device_id ir3595_id[] = {
 };
 MODULE_DEVICE_TABLE(i2c, ir3595_id);
 
-/* Return 0 if detection is successful, -ENODEV otherwise */
-static int ir3595_detect(struct i2c_client *client,
-                         struct i2c_board_info *info)
-{
-  /*
-   * We don't currently do any detection of the driver
-   */
-  strlcpy(info->type, "ir3595", I2C_NAME_SIZE);
-  return 0;
-}
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 5, 0)
+static int ir3595_probe(struct i2c_client *client)
+#else
 static int ir3595_probe(struct i2c_client *client,
                          const struct i2c_device_id *id)
+#endif
 {
-  int n_attrs = sizeof(ir3595_attr_table) / sizeof(ir3595_attr_table[0]);
-  struct device *dev = &client->dev;
   i2c_dev_data_st *data;
 
-  data = devm_kzalloc(dev, sizeof(i2c_dev_data_st), GFP_KERNEL);
-  if (!data) {
+  data = devm_kzalloc(&client->dev, sizeof(*data), GFP_KERNEL);
+  if (!data)
     return -ENOMEM;
-  }
 
-  return i2c_dev_sysfs_data_init(client, data,
-                                 ir3595_attr_table, n_attrs);
-}
+  i2c_set_clientdata(client, data);
 
-static int ir3595_remove(struct i2c_client *client)
-{
-  i2c_dev_data_st *data = i2c_get_clientdata(client);
-  i2c_dev_sysfs_data_clean(client, data);
-
-  return 0;
+  return devm_i2c_dev_sysfs_init(client, data, ir3595_attr_table,
+                                 ARRAY_SIZE(ir3595_attr_table));
 }
 
 static struct i2c_driver ir3595_driver = {
@@ -190,25 +176,11 @@ static struct i2c_driver ir3595_driver = {
     .name = "ir3595",
   },
   .probe    = ir3595_probe,
-  .remove   = ir3595_remove,
   .id_table = ir3595_id,
-  .detect   = ir3595_detect,
   .address_list = normal_i2c,
 };
-
-static int __init ir3595_mod_init(void)
-{
-  return i2c_add_driver(&ir3595_driver);
-}
-
-static void __exit ir3595_mod_exit(void)
-{
-  i2c_del_driver(&ir3595_driver);
-}
+module_i2c_driver(ir3595_driver);
 
 MODULE_AUTHOR("Mickey Zhan");
 MODULE_DESCRIPTION("ir3595 Driver");
 MODULE_LICENSE("GPL");
-
-module_init(ir3595_mod_init);
-module_exit(ir3595_mod_exit);

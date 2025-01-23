@@ -22,12 +22,14 @@
 
 // #define DEBUG
 
-#include <linux/errno.h>
-#include <linux/module.h>
-#include <linux/i2c.h>
 #include <linux/delay.h>
+#include <linux/errno.h>
+#include <linux/i2c.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/version.h>
 
-#include <i2c_dev_sysfs.h>
+#include "i2c_dev_sysfs.h"
 
 #ifdef DEBUG
 #define PSU_DEBUG(fmt, ...) do {                   \
@@ -360,7 +362,7 @@ static ssize_t psu_power_show(struct device *dev,
     case BELPOWER_1100_NA:
     case BELPOWER_1500_NAC:
     case MURATA_1500:
-      result = result = linear_convert(LINEAR_11, result, 1);
+      result = linear_convert(LINEAR_11, result, 1);
       break;
     default:
       break;
@@ -387,7 +389,7 @@ static ssize_t psu_vstby_show(struct device *dev,
       break;
     case BELPOWER_1100_NA:
     case BELPOWER_1500_NAC:
-      result = result = linear_convert(LINEAR_11, result, -6);
+      result = linear_convert(LINEAR_11, result, -6);
       break;
     case MURATA_1500:
       result = linear_convert(LINEAR_11, result, -7);
@@ -570,39 +572,23 @@ static const struct i2c_device_id psu_id[] = {
 };
 MODULE_DEVICE_TABLE(i2c, psu_id);
 
-/* Return 0 if detection is successful, -ENODEV otherwise */
-static int psu_detect(struct i2c_client *client,
-                         struct i2c_board_info *info)
-{
-  /*
-   * We don't currently do any detection of the driver
-   */
-  strlcpy(info->type, "psu_driver", I2C_NAME_SIZE);
-  return 0;
-}
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 5, 0)
+static int psu_probe(struct i2c_client *client)
+#else
 static int psu_probe(struct i2c_client *client,
                          const struct i2c_device_id *id)
+#endif
 {
-  int n_attrs = sizeof(psu_attr_table) / sizeof(psu_attr_table[0]);
-  struct device *dev = &client->dev;
   i2c_dev_data_st *data;
 
-  data = devm_kzalloc(dev, sizeof(i2c_dev_data_st), GFP_KERNEL);
-  if (!data) {
+  data = devm_kzalloc(&client->dev, sizeof(*data), GFP_KERNEL);
+  if (!data)
     return -ENOMEM;
-  }
 
-  return i2c_dev_sysfs_data_init(client, data,
-                                 psu_attr_table, n_attrs);
-}
+  i2c_set_clientdata(client, data);
 
-static int psu_remove(struct i2c_client *client)
-{
-  i2c_dev_data_st *data = i2c_get_clientdata(client);
-  i2c_dev_sysfs_data_clean(client, data);
-
-  return 0;
+  return devm_i2c_dev_sysfs_init(client, data, psu_attr_table,
+                                 ARRAY_SIZE(psu_attr_table));
 }
 
 static struct i2c_driver psu_driver = {
@@ -611,25 +597,11 @@ static struct i2c_driver psu_driver = {
     .name = "psu_driver",
   },
   .probe    = psu_probe,
-  .remove   = psu_remove,
   .id_table = psu_id,
-  .detect   = psu_detect,
   .address_list = normal_i2c,
 };
-
-static int __init psu_mod_init(void)
-{
-  return i2c_add_driver(&psu_driver);
-}
-
-static void __exit psu_mod_exit(void)
-{
-  i2c_del_driver(&psu_driver);
-}
+module_i2c_driver(psu_driver);
 
 MODULE_AUTHOR("Mickey Zhan");
 MODULE_DESCRIPTION("PSU Driver");
 MODULE_LICENSE("GPL");
-
-module_init(psu_mod_init);
-module_exit(psu_mod_exit);

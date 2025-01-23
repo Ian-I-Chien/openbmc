@@ -20,12 +20,14 @@
 
 // #define DEBUG
 
-#include <linux/errno.h>
-#include <linux/module.h>
-#include <linux/i2c.h>
 #include <linux/delay.h>
+#include <linux/errno.h>
+#include <linux/i2c.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/version.h>
 
-#include <i2c_dev_sysfs.h>
+#include "i2c_dev_sysfs.h"
 
 #ifdef DEBUG
 #define ISL68127_DEBUG(fmt, ...) do {                   \
@@ -220,40 +222,24 @@ static const struct i2c_device_id isl68127_id[] = {
 };
 MODULE_DEVICE_TABLE(i2c, isl68127_id);
 
-/* Return 0 if detection is successful, -ENODEV otherwise */
-static int isl68127_detect(struct i2c_client *client,
-                         struct i2c_board_info *info)
-{
-  /*
-   * We don't currently do any detection of the driver
-   */
-  strlcpy(info->type, "isl68127", I2C_NAME_SIZE);
-  return 0;
-}
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 5, 0)
+static int isl68127_probe(struct i2c_client *client)
+#else
 static int isl68127_probe(struct i2c_client *client,
                          const struct i2c_device_id *id)
+#endif
 {
-  int n_attrs = sizeof(isl68127_attr_table) / sizeof(isl68127_attr_table[0]);
-  struct device *dev = &client->dev;
   i2c_dev_data_st *data;
 
   client->flags |= I2C_CLIENT_PEC;
-  data = devm_kzalloc(dev, sizeof(i2c_dev_data_st), GFP_KERNEL);
-  if (!data) {
+  data = devm_kzalloc(&client->dev, sizeof(*data), GFP_KERNEL);
+  if (!data)
     return -ENOMEM;
-  }
 
-  return i2c_dev_sysfs_data_init(client, data,
-                                 isl68127_attr_table, n_attrs);
-}
+  i2c_set_clientdata(client, data);
 
-static int isl68127_remove(struct i2c_client *client)
-{
-  i2c_dev_data_st *data = i2c_get_clientdata(client);
-  i2c_dev_sysfs_data_clean(client, data);
-
-  return 0;
+  return devm_i2c_dev_sysfs_init(client, data, isl68127_attr_table,
+                                 ARRAY_SIZE(isl68127_attr_table));
 }
 
 static struct i2c_driver isl68127_driver = {
@@ -262,25 +248,11 @@ static struct i2c_driver isl68127_driver = {
     .name = "isl68127",
   },
   .probe    = isl68127_probe,
-  .remove   = isl68127_remove,
   .id_table = isl68127_id,
-  .detect   = isl68127_detect,
   .address_list = normal_i2c,
 };
-
-static int __init isl68127_mod_init(void)
-{
-  return i2c_add_driver(&isl68127_driver);
-}
-
-static void __exit isl68127_mod_exit(void)
-{
-  i2c_del_driver(&isl68127_driver);
-}
+module_i2c_driver(isl68127_driver);
 
 MODULE_AUTHOR("Mickey Zhan");
 MODULE_DESCRIPTION("isl68127 Driver");
 MODULE_LICENSE("GPL");
-
-module_init(isl68127_mod_init);
-module_exit(isl68127_mod_exit);

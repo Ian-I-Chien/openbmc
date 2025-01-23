@@ -20,12 +20,14 @@
 
 // #define DEBUG
 
-#include <linux/errno.h>
-#include <linux/module.h>
-#include <linux/i2c.h>
 #include <linux/delay.h>
+#include <linux/errno.h>
+#include <linux/i2c.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/version.h>
 
-#include <i2c_dev_sysfs.h>
+#include "i2c_dev_sysfs.h"
 
 #ifdef DEBUG
 #define MAX34461_DEBUG(fmt, ...) do {                   \
@@ -203,57 +205,44 @@ enum {
 };
 
 enum {
-  MAX34461,
   MAX34460,
+  MAX34461,
 };
 
 /* max34461 id */
 static const struct i2c_device_id max34461_id[] = {
-  {"max34461", MAX34461},
   {"max34460", MAX34460},
+  {"max34461", MAX34461},
   { },
 };
 MODULE_DEVICE_TABLE(i2c, max34461_id);
 
-/* Return 0 if detection is successful, -ENODEV otherwise */
-static int max34461_detect(struct i2c_client *client,
-                         struct i2c_board_info *info)
-{
-  /*
-   * We don't currently do any detection of the driver
-   */
-  strlcpy(info->type, "max34461", I2C_NAME_SIZE);
-  return 0;
-}
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 5, 0)
+static int max34461_probe(struct i2c_client *client)
+#else
 static int max34461_probe(struct i2c_client *client,
                          const struct i2c_device_id *id)
+#endif
 {
-  int n_attrs;
-  struct device *dev = &client->dev;
+  int type, n_attrs;
   i2c_dev_data_st *data;
 
-  data = devm_kzalloc(dev, sizeof(i2c_dev_data_st), GFP_KERNEL);
-  if (!data) {
+  data = devm_kzalloc(&client->dev, sizeof(*data), GFP_KERNEL);
+  if (!data)
     return -ENOMEM;
-  }
 
-  if (id->driver_data == MAX34460) {
+  type = i2c_match_id(max34461_id, client)->driver_data;
+  if (type == MAX34460)
     n_attrs = MAX34460_CHAN_NUM; /* 12 channel voltage monitor */
-  } else if (id->driver_data == MAX34461) {
+  else if (type == MAX34461)
     n_attrs = MAX34461_CHAN_NUM; /* 16 channel voltage monitor */
-  }
+  else
+    return -EINVAL;
 
-  return i2c_dev_sysfs_data_init(client, data,
-                                 max3446x_attr_table, n_attrs);
-}
+  i2c_set_clientdata(client, data);
 
-static int max34461_remove(struct i2c_client *client)
-{
-  i2c_dev_data_st *data = i2c_get_clientdata(client);
-  i2c_dev_sysfs_data_clean(client, data);
-
-  return 0;
+  return devm_i2c_dev_sysfs_init(client, data, max3446x_attr_table,
+                                 n_attrs);
 }
 
 static struct i2c_driver max34461_driver = {
@@ -262,25 +251,11 @@ static struct i2c_driver max34461_driver = {
     .name = "max34461",
   },
   .probe    = max34461_probe,
-  .remove   = max34461_remove,
   .id_table = max34461_id,
-  .detect   = max34461_detect,
   .address_list = normal_i2c,
 };
-
-static int __init max34461_mod_init(void)
-{
-  return i2c_add_driver(&max34461_driver);
-}
-
-static void __exit max34461_mod_exit(void)
-{
-  i2c_del_driver(&max34461_driver);
-}
+module_i2c_driver(max34461_driver);
 
 MODULE_AUTHOR("Mickey Zhan");
 MODULE_DESCRIPTION("max34461 Driver");
 MODULE_LICENSE("GPL");
-
-module_init(max34461_mod_init);
-module_exit(max34461_mod_exit);
