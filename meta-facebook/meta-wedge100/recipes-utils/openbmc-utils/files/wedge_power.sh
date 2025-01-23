@@ -49,7 +49,7 @@ usage() {
 }
 
 is_main_power_on() {
-  status=$(cat "$PWR_MAIN_SYSFS" | head -1 )
+  status=$(cat "$PWR_MAIN_SYSFS" | head -n 1 )
   if [ "$status" == "0x1" ]; then
       return 0            # powered on
   else
