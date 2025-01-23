@@ -27,7 +27,7 @@
 
 #define SERIAL_LEN 17
 
-usage()
+void usage()
 {
   fprintf(stderr, "Usage:  po-eeprom filename [filename...]\n"
 	  "\twhere filename is the location of the PowerOne EEPROM, likely\n"
@@ -36,7 +36,7 @@ usage()
   exit(2);
 }
 
-int safe_read(int fd, void *buf, size_t size, char *msg)
+void safe_read(int fd, void *buf, size_t size, char *msg)
 {
   if (read(fd, buf, size) != size) {
     perror(msg);
