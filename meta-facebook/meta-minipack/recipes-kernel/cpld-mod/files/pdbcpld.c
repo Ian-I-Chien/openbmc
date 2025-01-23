@@ -21,9 +21,12 @@
 //#define DEBUG
 
 #include <linux/errno.h>
+#include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/i2c.h>
-#include <i2c_dev_sysfs.h>
+#include <linux/version.h>
+
+#include "i2c_dev_sysfs.h"
 
 #ifdef DEBUG
 
@@ -196,39 +199,23 @@ static const struct i2c_device_id pdbcpld_id[] = {
 };
 MODULE_DEVICE_TABLE(i2c, pdbcpld_id);
 
-/* Return 0 if detection is successful, -ENODEV otherwise */
-static int pdbcpld_detect(struct i2c_client *client,
-                          struct i2c_board_info *info)
-{
-  /*
-   * We don't currently do any detection of the PDBCPLD
-   */
-  strlcpy(info->type, "pdbcpld", I2C_NAME_SIZE);
-  return 0;
-}
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 5, 0)
+static int pdbcpld_probe(struct i2c_client *client)
+#else
 static int pdbcpld_probe(struct i2c_client *client,
                          const struct i2c_device_id *id)
+#endif
 {
-  int n_attrs = sizeof(pdbcpld_attr_table) / sizeof(pdbcpld_attr_table[0]);
-  struct device *dev = &client->dev;
   i2c_dev_data_st *data;
 
-  data = devm_kzalloc(dev, sizeof(i2c_dev_data_st), GFP_KERNEL);
-  if (!data) {
+  data = devm_kzalloc(&client->dev, sizeof(*data), GFP_KERNEL);
+  if (!data)
     return -ENOMEM;
-  }
 
-  return i2c_dev_sysfs_data_init(client, data,
-                                 pdbcpld_attr_table, n_attrs);
-}
+  i2c_set_clientdata(client, data);
 
-static int pdbcpld_remove(struct i2c_client *client)
-{
-  i2c_dev_data_st *data = i2c_get_clientdata(client);
-  i2c_dev_sysfs_data_clean(client, data);
-
-  return 0;
+  return devm_i2c_dev_sysfs_init(client, data, pdbcpld_attr_table,
+                                 ARRAY_SIZE(pdbcpld_attr_table));
 }
 
 static struct i2c_driver pdbcpld_driver = {
@@ -237,25 +224,11 @@ static struct i2c_driver pdbcpld_driver = {
     .name = "pdbcpld",
   },
   .probe    = pdbcpld_probe,
-  .remove   = pdbcpld_remove,
   .id_table = pdbcpld_id,
-  .detect   = pdbcpld_detect,
   .address_list = normal_i2c,
 };
-
-static int __init pdbcpld_mod_init(void)
-{
-  return i2c_add_driver(&pdbcpld_driver);
-}
-
-static void __exit pdbcpld_mod_exit(void)
-{
-  i2c_del_driver(&pdbcpld_driver);
-}
+module_i2c_driver(pdbcpld_driver);
 
 MODULE_AUTHOR("Tian Fang <tfang@fb.com>");
 MODULE_DESCRIPTION("PDBCPLD Driver");
 MODULE_LICENSE("GPL");
-
-module_init(pdbcpld_mod_init);
-module_exit(pdbcpld_mod_exit);

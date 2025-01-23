@@ -21,9 +21,12 @@
 //#define DEBUG
 
 #include <linux/errno.h>
+#include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/i2c.h>
-#include <i2c_dev_sysfs.h>
+#include <linux/version.h>
+
+#include "i2c_dev_sysfs.h"
 
 #ifdef DEBUG
 
@@ -1000,39 +1003,23 @@ static const struct i2c_device_id scmcpld_id[] = {
 };
 MODULE_DEVICE_TABLE(i2c, scmcpld_id);
 
-/* Return 0 if detection is successful, -ENODEV otherwise */
-static int scmcpld_detect(struct i2c_client *client,
-                          struct i2c_board_info *info)
-{
-  /*
-   * We don't currently do any detection of the SCMCPLD
-   */
-  strlcpy(info->type, "scmcpld", I2C_NAME_SIZE);
-  return 0;
-}
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 5, 0)
+static int scmcpld_probe(struct i2c_client *client)
+#else
 static int scmcpld_probe(struct i2c_client *client,
                          const struct i2c_device_id *id)
+#endif
 {
-  int n_attrs = sizeof(scmcpld_attr_table) / sizeof(scmcpld_attr_table[0]);
-  struct device *dev = &client->dev;
   i2c_dev_data_st *data;
 
-  data = devm_kzalloc(dev, sizeof(i2c_dev_data_st), GFP_KERNEL);
-  if (!data) {
+  data = devm_kzalloc(&client->dev, sizeof(*data), GFP_KERNEL);
+  if (!data)
     return -ENOMEM;
-  }
 
-  return i2c_dev_sysfs_data_init(client, data,
-                                 scmcpld_attr_table, n_attrs);
-}
+  i2c_set_clientdata(client, data);
 
-static int scmcpld_remove(struct i2c_client *client)
-{
-  i2c_dev_data_st *data = i2c_get_clientdata(client);
-  i2c_dev_sysfs_data_clean(client, data);
-
-  return 0;
+  return devm_i2c_dev_sysfs_init(client, data, scmcpld_attr_table,
+                                 ARRAY_SIZE(scmcpld_attr_table));
 }
 
 static struct i2c_driver scmcpld_driver = {
@@ -1041,25 +1028,11 @@ static struct i2c_driver scmcpld_driver = {
     .name = "scmcpld",
   },
   .probe    = scmcpld_probe,
-  .remove   = scmcpld_remove,
   .id_table = scmcpld_id,
-  .detect   = scmcpld_detect,
   .address_list = normal_i2c,
 };
-
-static int __init scmcpld_mod_init(void)
-{
-  return i2c_add_driver(&scmcpld_driver);
-}
-
-static void __exit scmcpld_mod_exit(void)
-{
-  i2c_del_driver(&scmcpld_driver);
-}
+module_i2c_driver(scmcpld_driver);
 
 MODULE_AUTHOR("Tian Fang <tfang@fb.com>");
 MODULE_DESCRIPTION("SCMCPLD Driver");
 MODULE_LICENSE("GPL");
-
-module_init(scmcpld_mod_init);
-module_exit(scmcpld_mod_exit);
