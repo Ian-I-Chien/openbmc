@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/patches_6.5:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/patches_6.6:"
 
 SRC_URI += "file://1001-ARM-dts-aspeed-wedge100-Enable-spi1-devices.patch \
            "
