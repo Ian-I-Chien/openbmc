@@ -1,7 +1,7 @@
-From 46ec0da4ddc13f5f16a934a49286cb231ff9bf55 Mon Sep 17 00:00:00 2001
+From 3a9a5bc0d6b7d6ae0ff16af9368ae8904bfe3106 Mon Sep 17 00:00:00 2001
 From: Delphine CC Chiu <Delphine_CC_Chiu@wiwynn.com>
 Date: Mon, 23 Oct 2023 17:06:54 +0800
-Subject: [PATCH 03/14] Support OEM-META write file request for post code
+Subject: [PATCH 03/15] Support OEM-META write file request for post code
  history
 
 Support write file req when multiple hosts send postcode to BMC
@@ -29,7 +29,7 @@ Signed-off-by: Delphine CC Chiu <Delphine_CC_Chiu@wiwynn.com>
  create mode 100644 oem/meta/libpldmresponder/oem_meta_file_io_type_post_code.hpp
 
 diff --git a/common/utils.cpp b/common/utils.cpp
-index b096bc6..c495461 100644
+index 22f86d9..3956f32 100644
 --- a/common/utils.cpp
 +++ b/common/utils.cpp
 @@ -263,6 +263,21 @@ GetSubTreeResponse
@@ -55,7 +55,7 @@ index b096bc6..c495461 100644
      const std::string& objectPath, int depth,
      const std::vector<std::string>& ifaceList) const
 diff --git a/common/utils.hpp b/common/utils.hpp
-index 53cef17..978a34c 100644
+index 98e8539..0c44c81 100644
 --- a/common/utils.hpp
 +++ b/common/utils.hpp
 @@ -194,6 +194,8 @@ using Interfaces = std::vector<std::string>;
@@ -127,7 +127,7 @@ index cf6ecf5..459f4ba 100644
      'pldmresponder',
      sources,
 diff --git a/meson.build b/meson.build
-index bb00cc4..e11d34d 100644
+index 017ca18..7cd5981 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -140,6 +140,10 @@ conf_data.set('SENSOR_POLLING_TIME', get_option('sensor-polling-time'))
@@ -521,7 +521,7 @@ index 0000000..81ff4eb
 +
 +} // namespace pldm::responder::oem_meta
 diff --git a/pldmd/pldmd.cpp b/pldmd/pldmd.cpp
-index e44e880..7907961 100644
+index cf7755b..ac78c48 100644
 --- a/pldmd/pldmd.cpp
 +++ b/pldmd/pldmd.cpp
 @@ -68,6 +68,9 @@ PHOSPHOR_LOG2_USING;
@@ -548,5 +548,5 @@ index e44e880..7907961 100644
          FRU_JSONS_DIR, FRU_MASTER_JSON, pdrRepo.get(), entityTree.get(),
          bmcEntityTree.get());
 -- 
-2.25.1
+2.44.2
 

@@ -1,7 +1,7 @@
-From d39db0d4ece036969bde9db05364d0832344e37b Mon Sep 17 00:00:00 2001
+From c99914e195213dd9bd8d49b7b164aad031c72e70 Mon Sep 17 00:00:00 2001
 From: lora <lora.lin.wiwynn@gmail.com>
 Date: Fri, 27 Sep 2024 14:51:48 +0800
-Subject: [PATCH 04/14] platform-mc: Add OEM Meta event handler
+Subject: [PATCH 04/15] platform-mc: Add OEM Meta event handler
 
 Add OEM Meta handler with event type 0xFB. It will print the logs
 with prefix "BIOS_IPMI_SEL", so the user can utilize it to filter
@@ -59,18 +59,18 @@ Signed-off-by: Delphine CC Chiu <Delphine_CC_Chiu@wiwynn.com>
  oem/meta/platform-mc/event_oem_meta.hpp |  21 +
  platform-mc/event_manager.cpp           |  36 ++
  platform-mc/event_manager.hpp           |  15 +-
- platform-mc/manager.hpp                 |  26 +-
+ platform-mc/manager.hpp                 |  27 +-
  platform-mc/test/meson.build            |   2 +
  pldmd/pldmd.cpp                         |  10 +-
- 8 files changed, 924 insertions(+), 7 deletions(-)
+ 8 files changed, 925 insertions(+), 7 deletions(-)
  create mode 100644 oem/meta/platform-mc/event_oem_meta.cpp
  create mode 100644 oem/meta/platform-mc/event_oem_meta.hpp
 
 diff --git a/meson.build b/meson.build
-index e11d34d..82ed013 100644
+index 7cd5981..f2f456a 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -262,6 +262,7 @@ executable(
+@@ -263,6 +263,7 @@ executable(
      oem_files,
      'requester/mctp_endpoint_discovery.cpp',
      'requester/configuration_discovery_handler.cpp',
@@ -1049,7 +1049,7 @@ index 21199e0..3ccec55 100644
  } // namespace platform_mc
  } // namespace pldm
 diff --git a/platform-mc/manager.hpp b/platform-mc/manager.hpp
-index 29d924a..8a81c83 100644
+index 213f1f5..35e2ce7 100644
 --- a/platform-mc/manager.hpp
 +++ b/platform-mc/manager.hpp
 @@ -6,11 +6,14 @@
@@ -1067,7 +1067,7 @@ index 29d924a..8a81c83 100644
  namespace pldm
  {
  namespace platform_mc
-@@ -32,13 +35,17 @@ class Manager : public pldm::MctpDiscoveryHandlerIntf
+@@ -35,13 +38,17 @@ class Manager : public pldm::MctpDiscoveryHandlerIntf
      Manager& operator=(Manager&&) = delete;
      ~Manager() = default;
  
@@ -1088,7 +1088,7 @@ index 29d924a..8a81c83 100644
      {}
  
      /** @brief Helper function to do the actions before discovering terminus
-@@ -170,6 +177,18 @@ class Manager : public pldm::MctpDiscoveryHandlerIntf
+@@ -173,6 +180,18 @@ class Manager : public pldm::MctpDiscoveryHandlerIntf
          return PLDM_SUCCESS;
      }
  
@@ -1107,19 +1107,20 @@ index 29d924a..8a81c83 100644
      /** @brief The function to trigger the event polling
       *
       *  @param[in] tid - Terminus ID
-@@ -224,6 +243,7 @@ class Manager : public pldm::MctpDiscoveryHandlerIntf
+@@ -247,6 +266,8 @@ class Manager : public pldm::MctpDiscoveryHandlerIntf
  
-     /** @brief Store event manager handler */
-     EventManager eventManager;
+     /** @brief map of PLDM event type to EventHandlers */
+     PollHandlers pollHandlers;
++
 +    pldm::ConfigurationDiscoveryHandler* configurationDiscovery;
  };
  } // namespace platform_mc
  } // namespace pldm
 diff --git a/platform-mc/test/meson.build b/platform-mc/test/meson.build
-index 0e8bc87..d1bf36e 100644
+index e8ea6b7..64c2701 100644
 --- a/platform-mc/test/meson.build
 +++ b/platform-mc/test/meson.build
-@@ -8,6 +8,8 @@ test_src = declare_dependency(
+@@ -9,6 +9,8 @@ test_src = declare_dependency(
          '../numeric_sensor.cpp',
          '../event_manager.cpp',
          '../../requester/mctp_endpoint_discovery.cpp',
@@ -1129,7 +1130,7 @@ index 0e8bc87..d1bf36e 100644
      include_directories: ['../../requester', '../../pldmd'],
  )
 diff --git a/pldmd/pldmd.cpp b/pldmd/pldmd.cpp
-index 7907961..5d83747 100644
+index ac78c48..4c90fde 100644
 --- a/pldmd/pldmd.cpp
 +++ b/pldmd/pldmd.cpp
 @@ -290,7 +290,8 @@ int main(int argc, char** argv)

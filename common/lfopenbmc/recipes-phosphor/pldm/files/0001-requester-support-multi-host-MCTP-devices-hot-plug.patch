@@ -1,7 +1,7 @@
-From 93b3b7ac6ecf4c1b5553f225a13030374469ce3d Mon Sep 17 00:00:00 2001
+From c70852d5a8ed29e082d2a6f5b75e317cb6dd2e7c Mon Sep 17 00:00:00 2001
 From: Delphine CC Chiu <Delphine_CC_Chiu@wiwynn.com>
 Date: Mon, 18 Dec 2023 18:40:23 +0800
-Subject: [PATCH 01/14] requester: support multi-host MCTP devices hot plug
+Subject: [PATCH 01/15] requester: support multi-host MCTP devices hot plug
 
 Currently, pldmd listens for new MCTP endpoint exposed by mctpd, but
 they only shows their EID, Network Id, and SupportedMessageTypes, which
@@ -55,10 +55,10 @@ index 8e887a5..4d5de74 100644
 +                (const override));
  };
 diff --git a/common/types.hpp b/common/types.hpp
-index e3b10ee..47f12e4 100644
+index 86b7542..1653a7e 100644
 --- a/common/types.hpp
 +++ b/common/types.hpp
-@@ -68,9 +68,9 @@ using Interface = std::string;
+@@ -79,9 +79,9 @@ using Interface = std::string;
  using Interfaces = std::vector<std::string>;
  using Property = std::string;
  using PropertyType = std::string;
@@ -72,7 +72,7 @@ index e3b10ee..47f12e4 100644
  using PropertyMap = std::map<Property, Value>;
  using InterfaceMap = std::map<Interface, PropertyMap>;
 diff --git a/common/utils.cpp b/common/utils.cpp
-index 6f39321..b096bc6 100644
+index 7d7751c..22f86d9 100644
 --- a/common/utils.cpp
 +++ b/common/utils.cpp
 @@ -412,6 +412,23 @@ PropertyMap DBusHandler::getDbusPropertiesVariant(
@@ -100,7 +100,7 @@ index 6f39321..b096bc6 100644
                                   const nlohmann::json& value)
  {
 diff --git a/common/utils.hpp b/common/utils.hpp
-index 05dc4bd..53cef17 100644
+index 37765ba..98e8539 100644
 --- a/common/utils.hpp
 +++ b/common/utils.hpp
 @@ -174,7 +174,7 @@ struct DBusMapping
@@ -152,10 +152,10 @@ index af55f92..8fda98b 100644
  using InterfaceMap = std::map<Interface, PropertyMap>;
  using ObjectValueTree = std::map<sdbusplus::message::object_path, InterfaceMap>;
 diff --git a/meson.build b/meson.build
-index ff73738..bb00cc4 100644
+index 40bcf38..017ca18 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -257,6 +257,7 @@ executable(
+@@ -258,6 +258,7 @@ executable(
      'platform-mc/event_manager.cpp',
      oem_files,
      'requester/mctp_endpoint_discovery.cpp',
@@ -164,7 +164,7 @@ index ff73738..bb00cc4 100644
      dependencies: deps,
      install: true,
 diff --git a/pldmd/pldmd.cpp b/pldmd/pldmd.cpp
-index 2352b60..e44e880 100644
+index 0b6d129..cf7755b 100644
 --- a/pldmd/pldmd.cpp
 +++ b/pldmd/pldmd.cpp
 @@ -7,6 +7,7 @@

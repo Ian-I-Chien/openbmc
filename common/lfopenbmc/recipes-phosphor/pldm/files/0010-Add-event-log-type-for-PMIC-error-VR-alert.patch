@@ -1,7 +1,7 @@
-From b9a270402ae237cd1686688309ed67b3ec618b95 Mon Sep 17 00:00:00 2001
+From f33a1910da287f6bae44a03828345e79b79c7410 Mon Sep 17 00:00:00 2001
 From: Lora Lin <lora.lin.wiwynn@gmail.com>
 Date: Thu, 11 Jul 2024 10:10:27 +0800
-Subject: [PATCH 10/14] Add event log type for PMIC error/VR alert
+Subject: [PATCH 10/15] Add event log type for PMIC error/VR alert
 
 Summary:
 - Add event log type for PMIC error/PMbus alert/VR fault event.
@@ -13,7 +13,7 @@ Signed-off-by: Lora Lin <lora.lin.wiwynn@gmail.com>
  1 file changed, 96 insertions(+), 2 deletions(-)
 
 diff --git a/oem/meta/libpldmresponder/oem_meta_file_io_type_event_log.cpp b/oem/meta/libpldmresponder/oem_meta_file_io_type_event_log.cpp
-index 37ec22c..7f62f51 100644
+index 37ec22c..8a09289 100644
 --- a/oem/meta/libpldmresponder/oem_meta_file_io_type_event_log.cpp
 +++ b/oem/meta/libpldmresponder/oem_meta_file_io_type_event_log.cpp
 @@ -8,6 +8,8 @@ PHOSPHOR_LOG2_USING;

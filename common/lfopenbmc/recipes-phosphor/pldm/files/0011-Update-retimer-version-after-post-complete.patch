@@ -1,7 +1,7 @@
-From 0fd21c9cb5b899d047294ec444257ee49c2de3fd Mon Sep 17 00:00:00 2001
+From ed990125a55729f4b1dbce10eadca51769ebb090 Mon Sep 17 00:00:00 2001
 From: PeterHo-wiwynn <Peter_MH_Ho@wiwynn.com>
 Date: Thu, 19 Sep 2024 14:00:24 +0800
-Subject: [PATCH 11/14] Update retimer version after post complete
+Subject: [PATCH 11/15] Update retimer version after post complete
 
 The retimer will not be ready right away after fw update. The best
 timing to read retimer version is post-complete.
@@ -15,7 +15,7 @@ Change-Id: Id088e4b2bad2ed644cb0629e55ff85f919353e68
  1 file changed, 20 insertions(+)
 
 diff --git a/oem/meta/libpldmresponder/oem_meta_file_io_type_event_log.cpp b/oem/meta/libpldmresponder/oem_meta_file_io_type_event_log.cpp
-index 7f62f51..e8cb80a 100644
+index 8a09289..22698e2 100644
 --- a/oem/meta/libpldmresponder/oem_meta_file_io_type_event_log.cpp
 +++ b/oem/meta/libpldmresponder/oem_meta_file_io_type_event_log.cpp
 @@ -1,6 +1,7 @@
